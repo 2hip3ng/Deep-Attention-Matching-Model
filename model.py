@@ -1,27 +1,10 @@
-import argparse
-import glob
-import json
-import logging
-import os
-import random
-import math
-from tqdm import tqdm, trange
-import pickle
-import codecs
-
-from utils import load_embedding
-
-import numpy as np
-from sklearn.metrics import f1_score, accuracy_score
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from torch.nn import CrossEntropyLoss
-from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 
-logger = logging.getLogger(__name__)
+from utils import load_embedding
+
 LayerNorm = torch.nn.LayerNorm
 
 
@@ -265,13 +248,13 @@ class CNN(nn.Module):
 
         self.dropout = nn.Dropout(args.hidden_dropout_prob)
 
-    def conv_and_pool(self, x, conv):
-        x = F.relu(conv(x)).squeeze(3)
-        x = F.max_pool1d(x, x.size(2)).squeeze(2)
-        return x
+    def conv_and_pool(self, hidden_states, conv):
+        hidden_states = F.relu(conv(hidden_states)).squeeze(3)
+        hidden_states = F.max_pool1d(hidden_states, hidden_states.size(2)).squeeze(2)
+        return hidden_states
 
-    def forward(self, x):
-        out = x.unsqueeze(1)  # b * 1 * s * e
+    def forward(self, hidden_states):
+        out = hidden_states.unsqueeze(1)  # b * 1 * s * e
         out = torch.cat([self.conv_and_pool(out, conv) for conv in self.convs], 1)
         out = self.dropout(out)
         return out
@@ -283,38 +266,19 @@ class Pooling(nn.Module):
         self.cnn = CNN(args)
         self.dropout = nn.Dropout(args.hidden_dropout_prob)
 
-    def forward(self, x, mask):
-        x_1 = x
-        x_2 = x
-        x_1 = self.cnn(x_1)
+    def forward(self, hidden_states, mask):
+        cnn_output = self.cnn(hidden_states)
 
         extended_mask = mask[:, :, None]
         extended_mask = (1.0 - extended_mask) * (-100000)
         mask = extended_mask
+        max_output = hidden_states + mask
+        max_output = max_output.max(dim=1)[0]
 
-        x_2 = x_2 + mask
-
-        x_2 = x_2.max(dim=1)[0]
-
-        out = torch.cat([x_1, x_2], dim=-1)
+        out = torch.cat([cnn_output, max_output], dim=-1)
         out = self.dropout(out)
 
         return out
-        # return torch.cat([x_1, x_2], dim=-1)
-
-        '''
-        x_avg = torch.sum(x * mask.unsqueeze(1).transpose(2, 1), dim=1)\
-                            / torch.sum(mask, dim=1, keepdim=True)
-        # max pooling
-        # print('mask:', mask)
-        extended_mask = mask[:, :, None]
-        extended_mask = (1.0 - extended_mask) * (-100000)
-        mask = extended_mask
-        # print('extended_mask:', mask)
-        x = x + mask
-        # return torch.cat([x.max(dim=1)[0], x_avg], -1)
-        return x.max(dim=1)[0]
-        '''
 
 
 class Prediction(nn.Module):
@@ -365,3 +329,4 @@ class MatchModel(nn.Module):
         outputs = (loss, outputs)
 
         return outputs
+

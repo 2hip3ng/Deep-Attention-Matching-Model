@@ -1,15 +1,20 @@
+import os
+import math
+import argparse
+import logging
+from tqdm import tqdm, trange
+
 import numpy as np
 import torch
 from torch import nn
-import torch.nn.functional as F
-from torch.autograd import Variable
-from torch.nn import CrossEntropyLoss
-from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
+from sklearn.metrics import f1_score, accuracy_score
 
 from model import MatchModel
-from utils import set_seed, sentence2ids, load_vocab, load_dataset, build_vocab, model_init
+from utils import set_seed, load_vocab, load_dataset, build_vocab, model_init
 
+
+logger = logging.getLogger(__name__)
 
 
 def train(args, train_dataset, model, tokenizer, word2id):
@@ -43,28 +48,13 @@ def train(args, train_dataset, model, tokenizer, word2id):
         * args.gradient_accumulation_steps,
     )
     logger.info("  Gradient Accumulation steps = %d", args.gradient_accumulation_steps)
-    # print('cnm')
     logger.info("  Total optimization steps = %d", t_total)
 
-    # print('nmsl')
     global_step = 0
     epochs_trained = 0
     steps_trained_in_current_epoch = 0
-    # Check if continuing training from a checkpoint
-    """
-    if os.path.exists(args.model_name_or_path):
-        # set global_step to gobal_step of last saved checkpoint from model path
-        global_step = int(args.model_name_or_path.split("-")[-1].split("/")[0])
-        epochs_trained = global_step // (len(train_dataloader) // args.gradient_accumulation_steps)
-        steps_trained_in_current_epoch = global_step % (len(train_dataloader) // args.gradient_accumulation_steps)
 
-        logger.info("  Continuing training from checkpoint, will skip to saved global_step")
-        logger.info("  Continuing training from epoch %d", epochs_trained)
-        logger.info("  Continuing training from global step %d", global_step)
-        logger.info("  Will skip the first %d steps in the first epoch", steps_trained_in_current_epoch)
-    """
     tr_loss, logging_loss = 0.0, 0.0
-    # print('model zero grad start')
     model.zero_grad()
 
     train_iterator = range(
@@ -76,11 +66,11 @@ def train(args, train_dataset, model, tokenizer, word2id):
     loss_show = []
 
     best_acc = 0
-    # print(' start training....')
+
     for epoch, _ in enumerate(train_iterator):
         epoch_loss = 0.0
 
-        # epoch_iterator = tqdm(train_dataloader, desc="Iteration")
+
         epoch_iterator = train_dataloader
         for step, batch in enumerate(epoch_iterator):
 
@@ -147,13 +137,13 @@ def train(args, train_dataset, model, tokenizer, word2id):
         best_acc = max(f1, best_acc)
         print('best acc:', best_acc)
 
-        f = codecs.open('snli/test.txt', 'r')
-        f_out = codecs.open('snli_bad_case/bad_case_' + str(epoch) + '.txt', 'w')
-        lines = f.readlines()
-        for i, line in enumerate(lines):
-            if int(line.strip()[-1]) != preds[i]:
-                f_out.write(line.strip() + '\t' + str(preds[i]) + '\n')
-        print('write bad case!!!')
+        # f = codecs.open('snli/test.txt', 'r')
+        # f_out = codecs.open('snli_bad_case/bad_case_' + str(epoch) + '.txt', 'w')
+        # lines = f.readlines()
+        # for i, line in enumerate(lines):
+        #     if int(line.strip()[-1]) != preds[i]:
+        #         f_out.write(line.strip() + '\t' + str(preds[i]) + '\n')
+        # print('write bad case!!!')
 
     print('*' * 20)
     print('best acc:', best_acc)
@@ -180,7 +170,7 @@ def evaluate(args, eval_dataset, model, tokenizer, word2id):
     nb_eval_steps = 0
     preds = None
     out_label_ids = None
-    # for batch in tqdm(eval_dataloader, desc="Evaluating"):
+
     for batch in eval_dataloader:
         model.eval()
         batch = tuple(t.to(args.device) for t in batch)
@@ -287,6 +277,8 @@ def main():
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
                         datefmt="%m/%d/%Y %H:%M:%S", level=logging.INFO, )
     logger.warning("device: %s, n_gpu: %s,", device, args.n_gpu)
+
+    args.logger = logger
 
     # Set seed
     set_seed(args)
@@ -500,3 +492,17 @@ if __name__ == '__main__':
 
     # plt.savefig('CrossEntropyLoss.png')
     plt.show()
+
+# Check if continuing training from a checkpoint
+    """
+    if os.path.exists(args.model_name_or_path):
+        # set global_step to gobal_step of last saved checkpoint from model path
+        global_step = int(args.model_name_or_path.split("-")[-1].split("/")[0])
+        epochs_trained = global_step // (len(train_dataloader) // args.gradient_accumulation_steps)
+        steps_trained_in_current_epoch = global_step % (len(train_dataloader) // args.gradient_accumulation_steps)
+
+        logger.info("  Continuing training from checkpoint, will skip to saved global_step")
+        logger.info("  Continuing training from epoch %d", epochs_trained)
+        logger.info("  Continuing training from global step %d", global_step)
+        logger.info("  Will skip the first %d steps in the first epoch", steps_trained_in_current_epoch)
+    """

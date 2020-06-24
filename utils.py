@@ -1,15 +1,13 @@
 import os
-import codecs
 import random
-import pickle
 import logging
+import pickle
 from collections import Counter
+
 
 import numpy as np
 import torch
 from torch.utils.data import TensorDataset
-
-logger = logging.getLogger(__name__)
 
 
 def set_seed(args):
@@ -34,24 +32,21 @@ def build_vocab(args):
         for file in files:
             if not os.path.isdir(file) and file != '.DS_Store':
                 file_path = os.path.join("data", args.task, file)
-                f = codecs.open(file_path, 'r')
-                for line in f.readlines():
-                    text_a, text_b, label = line.strip().split('\t')
-                    if args.do_lower_case:
-                        text_a = text_a.lower()
-                        text_b = text_b.lower()
-                    vocab.update(text_a.split())
-                    vocab.update(text_b.split())
-                f.close()
+                with open(file_path, 'r') as f:
+                    for line in f.readlines():
+                        text_a, text_b, label = line.strip().split('\t')
+                        if args.do_lower_case:
+                            text_a = text_a.lower()
+                            text_b = text_b.lower()
+                        vocab.update(text_a.split())
+                        vocab.update(text_b.split())
 
-        f = codecs.open(vocab_path, 'w')
-        vocab = vocab.items()
-        vocab = sorted(vocab, key=lambda x: x[1], reverse=True)
-        f.write('<PAD>\n<UNK>\n')
-        for _ in vocab:
-            f.write(_[0] + '\n')
-        f.close()
-    return
+        with open(vocab_path, 'w') as f:
+            vocab = vocab.items()
+            vocab = sorted(vocab, key=lambda x: x[1], reverse=True)
+            f.write('<PAD>\n<UNK>\n')
+            for _ in vocab:
+                f.write(_[0] + '\n')
 
 
 def load_vocab(args):
@@ -126,7 +121,7 @@ def load_embedding(args):
                         tar_count += 1
                         glove_vocab[token] = 1
 
-        logger.info('oov: %s, partition: %s' % (len(vocab) - tar_count,  (len(vocab) - tar_count) / len(vocab)))
+        args.logger.info('oov: %s, partition: %s' % (len(vocab) - tar_count,  (len(vocab) - tar_count) / len(vocab)))
 
         with open(embedding_cache_path, 'wb') as f:
             pickle.dump(embedding, f)
@@ -151,7 +146,7 @@ def load_dataset(args, word2id, data_type):
     for (ex_index, example) in enumerate(examples):
         len_examples = len(examples)
         if ex_index % 10000 == 0:
-            logger.info("Writing example %d/%d" % (ex_index, len_examples))
+            args.logger.info("Writing example %d/%d" % (ex_index, len_examples))
 
         input_ids_a = sentence2ids(args, example[0], word2id)
         attention_mask_a = [1] * len(input_ids_a)
