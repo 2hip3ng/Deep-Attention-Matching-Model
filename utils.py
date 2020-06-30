@@ -7,8 +7,10 @@ from collections import Counter
 
 import numpy as np
 import torch
+from torch import nn
 from torch.utils.data import TensorDataset
 
+LayerNorm = nn.LayerNorm
 
 def set_seed(args):
     random.seed(args.seed)
@@ -22,6 +24,8 @@ def set_seed(args):
 
 
 def build_vocab(args):
+    args.logger.info("building vocab")
+
     vocab_path = os.path.join("data", args.task, "vocab.txt")
 
     if not os.path.exists(vocab_path):
@@ -50,6 +54,8 @@ def build_vocab(args):
 
 
 def load_vocab(args):
+    args.logger.info("loading vocab")
+
     vocab_path = os.path.join("data", args.task, "vocab.txt")
     if not os.path.exists(vocab_path):
         build_vocab(args)
@@ -79,6 +85,7 @@ def sentence2ids(args, sentence, word2id):
 
 
 def load_embedding(args):
+    args.logger.info('loading embedding')
     embedding_cache_path = os.path.join('data/glove', args.task+'.pkl')
 
     if os.path.exists(embedding_cache_path):
@@ -92,8 +99,6 @@ def load_embedding(args):
 
         vocab, word2id = load_vocab(args)
 
-        args.logger.info('load embedding ... ')
-
         args.vocab_size = max(args.vocab_size, len(vocab)+1)
         embedding = np.zeros((args.vocab_size, 300))
         tar_count = 0
@@ -101,11 +106,11 @@ def load_embedding(args):
         glove_path = os.path.join("data", "glove", "glove.840B.300d.txt")
         with open(glove_path) as f:
             file_length = 2196017
-            index = 0
+            log_index = 0
             for line in f:
-                index += 1
-                if index % (file_length // 100) == 0:
-                    args.logger.info(index // (file_length // 100))
+                log_index += 1
+                if log_index % (file_length // 100) == 0:
+                    args.logger.info(log_index // (file_length // 100))
                 elems = line.rstrip().split()
                 if len(elems) != 300 + 1:
                     continue
@@ -136,7 +141,7 @@ def load_embedding(args):
 
 
 def load_dataset(args, word2id, data_type):
-    data_path = os.path.join(args.data_dir, data_type + '.txt')
+    data_path = os.path.join(args.data_dir, args.task, data_type + '.txt')
 
     # Read Data
     with open(data_path, "r", encoding="utf-8") as f:

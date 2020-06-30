@@ -33,8 +33,8 @@ def train(args, train_dataset, model, tokenizer, word2id):
     if args.n_gpu > 1:
         model = torch.nn.DataParallel(model)
 
-    # optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, eps=args.adam_epsilon)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, eps=args.adam_epsilon)
+    # optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.1)
 
     # Train!
@@ -212,7 +212,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Data And Task
-    parser.add_argument("--data_dir", default='snli', type=str)
+    parser.add_argument("--data_dir", default='data', type=str)
     parser.add_argument("--output_dir", default='output', type=str)
     parser.add_argument("--task", default='snli', type=str)
     parser.add_argument("--labels", default=['0', '1', '2'], type=list)
@@ -289,7 +289,7 @@ def main():
     # Build Model
     model = MatchModel(args)
     model.to(args.device)
-    model_init(model)
+    model_init(model, args)
 
     logger.info("Training parameters %s", args)
 
