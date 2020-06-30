@@ -18,7 +18,7 @@ class EmbeddingLayer(nn.Module):
         self.word_embeddings = nn.Embedding(args.vocab_size, args.embedding_size, padding_idx=0)
         self.dropout = nn.Dropout(args.embedding_dropout_prob)
 
-        embedding = load_embedding(args.task)
+        embedding = load_embedding(args)
         self.word_embeddings.weight.requires_grad = args.fix_embedding    # False
         self.word_embeddings.weight.data.copy_(torch.from_numpy(embedding))
 

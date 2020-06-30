@@ -51,6 +51,8 @@ def build_vocab(args):
 
 def load_vocab(args):
     vocab_path = os.path.join("data", args.task, "vocab.txt")
+    if not os.path.exists(vocab_path):
+        build_vocab(args)
 
     with open(vocab_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -90,7 +92,7 @@ def load_embedding(args):
 
         vocab, word2id = load_vocab(args)
 
-        logger.info('load embedding ... ')
+        args.logger.info('load embedding ... ')
 
         args.vocab_size = max(args.vocab_size, len(vocab)+1)
         embedding = np.zeros((args.vocab_size, 300))
@@ -98,13 +100,17 @@ def load_embedding(args):
         glove_vocab = {}
         glove_path = os.path.join("data", "glove", "glove.840B.300d.txt")
         with open(glove_path) as f:
+            file_length = 2196017
+            index = 0
             for line in f:
+                index += 1
+                if index % (file_length // 100) == 0:
+                    args.logger.info(index // (file_length // 100))
                 elems = line.rstrip().split()
                 if len(elems) != 300 + 1:
                     continue
                 token = elems[0]
 
-                # token = token.lower()
                 if token in vocab:
                     index = vocab.index(token)
                     vector = [float(x) for x in elems[1:]]
@@ -121,7 +127,7 @@ def load_embedding(args):
                         tar_count += 1
                         glove_vocab[token] = 1
 
-        args.logger.info('oov: %s, partition: %s' % (len(vocab) - tar_count,  (len(vocab) - tar_count) / len(vocab)))
+        args.logger.info('Number of word out of glove: %s, partition: %s' % (len(vocab) - tar_count,  (len(vocab) - tar_count) / len(vocab)))
 
         with open(embedding_cache_path, 'wb') as f:
             pickle.dump(embedding, f)

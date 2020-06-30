@@ -230,19 +230,19 @@ def main():
     parser.add_argument("--num_train_epochs", default=50, type=int)
 
     # Model parameters
-    parser.add_argument("--vocab_size", default=10000, type=int)
+    parser.add_argument("--vocab_size", default=100000, type=int)
     parser.add_argument("--fix_embedding", default=True, type=bool)
     parser.add_argument("--embedding_size", default=300, type=int)
     parser.add_argument("--hidden_size", default=300, type=int)
-    parser.add_argument("--intermediate_size", default=2148, type=int)
+    parser.add_argument("--intermediate_size", default=2048, type=int)
     parser.add_argument("--num_hidden_layers", default=3, type=int)
-    parser.add_argument("--num_encoder_layers", default=3, type=int)
+    parser.add_argument("--num_encoder_layers", default=2, type=int)
     parser.add_argument("--num_attention_heads", default=6, type=int)
     parser.add_argument("--num_last_selfatt_layers", default=2, type=int)
     parser.add_argument("--embedding_dropout_prob", default=0.2, type=float)
     parser.add_argument("--hidden_dropout_prob", default=0.2, type=float)
     parser.add_argument("--attention_dropout_prob", default=0.2, type=float)
-    parser.add_argument("--norm_eps", default=0.1, type=float)
+    parser.add_argument("--norm_eps", default=1e-12, type=float)
     parser.add_argument("--cnn_num_filters", default=200, type=int)
     parser.add_argument("--cnn_filter_sizes", default=[1,2,3], type=list)
 
@@ -364,145 +364,145 @@ if __name__ == '__main__':
 
 
 
-
-"""
-    # Saving best-practices: if you use defaults names for the model, you can reload it using from_pretrained()
-    if args.do_train:
-        # Create output directory if needed
-        if not os.path.exists(args.output_dir):
-            os.makedirs(args.output_dir)
-
-
-
-        logger.info("Saving model checkpoint to %s", args.output_dir)
-        # Save a trained model, configuration and tokenizer using `save_pretrained()`.
-        # They can then be reloaded using `from_pretrained()`
-        model_to_save = (
-            model.module if hasattr(model, "module") else model
-        )  # Take care of distributed/parallel training
-        model_to_save.save_pretrained(args.output_dir)
-        tokenizer.save_pretrained(args.output_dir)
-
-        # Good practice: save your training arguments together with the trained model
-        torch.save(args, os.path.join(args.output_dir, "training_args.bin"))
-
-        # Load a trained model and vocabulary that you have fine-tuned
-        model = model_class.from_pretrained(args.output_dir)
-        tokenizer = tokenizer_class.from_pretrained(args.output_dir)
-        model.to(args.device)
-
-
-    # Evaluation
-    results = {}
-
-    if args.do_eval:
-        tokenizer = tokenizer_class.from_pretrained(args.output_dir, do_lower_case=args.do_lower_case)
-        checkpoints = [args.output_dir]
-        if args.eval_all_checkpoints:
-            checkpoints = list(
-                os.path.dirname(c) for c in sorted(glob.glob(args.output_dir + "/**/" + WEIGHTS_NAME, recursive=True))
-            )
-            logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce logging
-        logger.info("Evaluate the following checkpoints: %s", checkpoints)
-        for checkpoint in checkpoints:
-            global_step = checkpoint.split("-")[-1] if len(checkpoints) > 1 else ""
-            prefix = checkpoint.split("/")[-1] if checkpoint.find("checkpoint") != -1 else ""
-
-            model = model_class.from_pretrained(checkpoint)
-            model.to(args.device)
-            result = evaluate(args, model, tokenizer, prefix=prefix)
-            result = dict((k + "_{}".format(global_step), v) for k, v in result.items())
-            results.update(result)
-
-
-    return results
-
-    """
-
-
-# f = codecs.open('snli/test.txt', 'r')
-                # f_out = codecs.open('snli_bad_case/bad_case_'+str(epoch) +'.txt', 'w')
-                # lines = f.readlines()
-                # for i, line in enumerate(lines):
-                #     if int(line.strip()[-1]) != preds[i]:
-                #         f_out.write(line.strip() + '\t' + str(preds[i]) + '\n')
-                # print('write bad case!!!')
-
-
-"""
-    # Prepare optimizer and schedule (linear warmup and decay)
-    no_decay = ["bias", "LayerNorm.weight"]
-    optimizer_grouped_parameters = [
-        {
-            "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
-            "weight_decay": args.weight_decay,
-        },
-        {"params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], "weight_decay": 0.0},
-    ]
-
-
-    optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
-    scheduler = get_linear_schedule_with_warmup(
-        optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total
-    )
-
-    # Check if saved optimizer or scheduler states exist
-    if os.path.isfile(os.path.join(args.model_name_or_path, "optimizer.pt")) and os.path.isfile(
-        os.path.join(args.model_name_or_path, "scheduler.pt")
-    ):
-        # Load in optimizer and scheduler states
-        optimizer.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "optimizer.pt")))
-        scheduler.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "scheduler.pt")))
-    """
-
-
-# show loss pic
-    x = []
-    y = loss_show
-    for i in range(len(y)):
-        x.append(i)
-
-    import matplotlib
-    import matplotlib.pyplot as plt
-    from matplotlib.pyplot import MultipleLocator
-    # 从pyplot导入MultipleLocator类，这个类用于设置刻度间隔
-
-    % matplotlib
-    inline
-    plt.plot(x, y)
-    plt.title('Loss Change')
-    plt.xlabel("Step")
-    plt.ylabel("Loss")
-    plt.grid(True)
-
-    #     x_major_locator=MultipleLocator(0.05)
-    #     #把x轴的刻度间隔设置为0.05，并存在变量里
-    #     y_major_locator=MultipleLocator(0.1)
-    #     #把y轴的刻度间隔设置为0.1，并存在变量里
-    #     ax=plt.gca()
-    #     #ax为两条坐标轴的实例
-    #     ax.xaxis.set_major_locator(x_major_locator)
-    #     #把x轴的主刻度设置为0.05的倍数
-    #     ax.yaxis.set_major_locator(y_major_locator)
-    #     #把y轴的主刻度设置为0.1的倍数
-    #     plt.xlim(0, 1)
-    #     #把x轴的刻度范围设置为0到1
-    #     plt.ylim(0, 5)
-    # 把y轴的刻度范围设置为0到5
-
-    # plt.savefig('CrossEntropyLoss.png')
-    plt.show()
-
-# Check if continuing training from a checkpoint
-    """
-    if os.path.exists(args.model_name_or_path):
-        # set global_step to gobal_step of last saved checkpoint from model path
-        global_step = int(args.model_name_or_path.split("-")[-1].split("/")[0])
-        epochs_trained = global_step // (len(train_dataloader) // args.gradient_accumulation_steps)
-        steps_trained_in_current_epoch = global_step % (len(train_dataloader) // args.gradient_accumulation_steps)
-
-        logger.info("  Continuing training from checkpoint, will skip to saved global_step")
-        logger.info("  Continuing training from epoch %d", epochs_trained)
-        logger.info("  Continuing training from global step %d", global_step)
-        logger.info("  Will skip the first %d steps in the first epoch", steps_trained_in_current_epoch)
-    """
+#
+# """
+#     # Saving best-practices: if you use defaults names for the model, you can reload it using from_pretrained()
+#     if args.do_train:
+#         # Create output directory if needed
+#         if not os.path.exists(args.output_dir):
+#             os.makedirs(args.output_dir)
+#
+#
+#
+#         logger.info("Saving model checkpoint to %s", args.output_dir)
+#         # Save a trained model, configuration and tokenizer using `save_pretrained()`.
+#         # They can then be reloaded using `from_pretrained()`
+#         model_to_save = (
+#             model.module if hasattr(model, "module") else model
+#         )  # Take care of distributed/parallel training
+#         model_to_save.save_pretrained(args.output_dir)
+#         tokenizer.save_pretrained(args.output_dir)
+#
+#         # Good practice: save your training arguments together with the trained model
+#         torch.save(args, os.path.join(args.output_dir, "training_args.bin"))
+#
+#         # Load a trained model and vocabulary that you have fine-tuned
+#         model = model_class.from_pretrained(args.output_dir)
+#         tokenizer = tokenizer_class.from_pretrained(args.output_dir)
+#         model.to(args.device)
+#
+#
+#     # Evaluation
+#     results = {}
+#
+#     if args.do_eval:
+#         tokenizer = tokenizer_class.from_pretrained(args.output_dir, do_lower_case=args.do_lower_case)
+#         checkpoints = [args.output_dir]
+#         if args.eval_all_checkpoints:
+#             checkpoints = list(
+#                 os.path.dirname(c) for c in sorted(glob.glob(args.output_dir + "/**/" + WEIGHTS_NAME, recursive=True))
+#             )
+#             logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce logging
+#         logger.info("Evaluate the following checkpoints: %s", checkpoints)
+#         for checkpoint in checkpoints:
+#             global_step = checkpoint.split("-")[-1] if len(checkpoints) > 1 else ""
+#             prefix = checkpoint.split("/")[-1] if checkpoint.find("checkpoint") != -1 else ""
+#
+#             model = model_class.from_pretrained(checkpoint)
+#             model.to(args.device)
+#             result = evaluate(args, model, tokenizer, prefix=prefix)
+#             result = dict((k + "_{}".format(global_step), v) for k, v in result.items())
+#             results.update(result)
+#
+#
+#     return results
+#
+#     """
+#
+#
+# # f = codecs.open('snli/test.txt', 'r')
+#                 # f_out = codecs.open('snli_bad_case/bad_case_'+str(epoch) +'.txt', 'w')
+#                 # lines = f.readlines()
+#                 # for i, line in enumerate(lines):
+#                 #     if int(line.strip()[-1]) != preds[i]:
+#                 #         f_out.write(line.strip() + '\t' + str(preds[i]) + '\n')
+#                 # print('write bad case!!!')
+#
+#
+# """
+#     # Prepare optimizer and schedule (linear warmup and decay)
+#     no_decay = ["bias", "LayerNorm.weight"]
+#     optimizer_grouped_parameters = [
+#         {
+#             "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
+#             "weight_decay": args.weight_decay,
+#         },
+#         {"params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], "weight_decay": 0.0},
+#     ]
+#
+#
+#     optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
+#     scheduler = get_linear_schedule_with_warmup(
+#         optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total
+#     )
+#
+#     # Check if saved optimizer or scheduler states exist
+#     if os.path.isfile(os.path.join(args.model_name_or_path, "optimizer.pt")) and os.path.isfile(
+#         os.path.join(args.model_name_or_path, "scheduler.pt")
+#     ):
+#         # Load in optimizer and scheduler states
+#         optimizer.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "optimizer.pt")))
+#         scheduler.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "scheduler.pt")))
+#     """
+#
+#
+# # show loss pic
+#     x = []
+#     y = loss_show
+#     for i in range(len(y)):
+#         x.append(i)
+#
+#     import matplotlib
+#     import matplotlib.pyplot as plt
+#     from matplotlib.pyplot import MultipleLocator
+#     # 从pyplot导入MultipleLocator类，这个类用于设置刻度间隔
+#
+#     % matplotlib
+#     inline
+#     plt.plot(x, y)
+#     plt.title('Loss Change')
+#     plt.xlabel("Step")
+#     plt.ylabel("Loss")
+#     plt.grid(True)
+#
+#     #     x_major_locator=MultipleLocator(0.05)
+#     #     #把x轴的刻度间隔设置为0.05，并存在变量里
+#     #     y_major_locator=MultipleLocator(0.1)
+#     #     #把y轴的刻度间隔设置为0.1，并存在变量里
+#     #     ax=plt.gca()
+#     #     #ax为两条坐标轴的实例
+#     #     ax.xaxis.set_major_locator(x_major_locator)
+#     #     #把x轴的主刻度设置为0.05的倍数
+#     #     ax.yaxis.set_major_locator(y_major_locator)
+#     #     #把y轴的主刻度设置为0.1的倍数
+#     #     plt.xlim(0, 1)
+#     #     #把x轴的刻度范围设置为0到1
+#     #     plt.ylim(0, 5)
+#     # 把y轴的刻度范围设置为0到5
+#
+#     # plt.savefig('CrossEntropyLoss.png')
+#     plt.show()
+#
+# # Check if continuing training from a checkpoint
+#     """
+#     if os.path.exists(args.model_name_or_path):
+#         # set global_step to gobal_step of last saved checkpoint from model path
+#         global_step = int(args.model_name_or_path.split("-")[-1].split("/")[0])
+#         epochs_trained = global_step // (len(train_dataloader) // args.gradient_accumulation_steps)
+#         steps_trained_in_current_epoch = global_step % (len(train_dataloader) // args.gradient_accumulation_steps)
+#
+#         logger.info("  Continuing training from checkpoint, will skip to saved global_step")
+#         logger.info("  Continuing training from epoch %d", epochs_trained)
+#         logger.info("  Continuing training from global step %d", global_step)
+#         logger.info("  Will skip the first %d steps in the first epoch", steps_trained_in_current_epoch)
+#     """
