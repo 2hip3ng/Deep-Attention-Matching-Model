@@ -99,7 +99,7 @@ def train(args, train_dataset, model, tokenizer, word2id):
             epoch_loss += loss.item()
 
             loss_show.append(loss.item())
-            if (step + 1) % 100 == 0:
+            if (step + 1) % args.logging_steps == 0:
                 print('epochs:', epoch, 'train step:', step, 'total step:', len(epoch_iterator), 'loss:', loss.item())
 
             if (step + 1) % args.gradient_accumulation_steps == 0:
@@ -120,7 +120,7 @@ def train(args, train_dataset, model, tokenizer, word2id):
                 model.zero_grad()
                 global_step += 1
 
-            if (step + 1) % 400 == 0:
+            if (step + 1) % args.eval_steps == 0:
                 logger.info(" train average loss = %s", epoch_loss / step)
 
                 dev_dataset = load_dataset(args, word2id, 'test')
@@ -262,11 +262,12 @@ def main():
     parser.add_argument("--no_cuda", default=False, type=bool)
     parser.add_argument("--seed", default=2020, type=int)
     parser.add_argument("--logging_steps", type=int, default=500, help="Log every X updates steps.")
+    parser.add_argument("--eval_steps", type=int, default=500, help="Eval every X updates steps.")
     parser.add_argument("--save_steps", type=int, default=500, help="Save checkpoint every X updates steps.")
     parser.add_argument("--max_steps", default=-1, type=int, help="If > 0: set total number of training steps to perform. Override num_train_epochs.", )
 
-    # args = parser.parse_args()
-    args = parser.parse_args(args=[])
+    args = parser.parse_args()
+    # args = parser.parse_args(args=[])
 
     # Setup CUDA, GPU
     device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
