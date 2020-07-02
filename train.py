@@ -2,7 +2,6 @@ import os
 import math
 import argparse
 import logging
-from tqdm import tqdm, trange
 
 import numpy as np
 import torch
@@ -100,14 +99,14 @@ def train(args, train_dataset, model, tokenizer, word2id):
 
             loss_show.append(loss.item())
             if (step + 1) % args.logging_steps == 0:
-                print('epochs:', epoch, 'train step:', step, 'total step:', len(epoch_iterator), 'loss:', loss.item())
+                logger.info('epochs: %d, train step: %d, total step: %d, loss: %s', epoch, step, len(epoch_iterator), loss.item())
 
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 # torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
 
                 optimizer.step()
                 # scheduler.step()  # Update learning rate schedule
-                # print("Decaying learning rate to %g" % scheduler.get_lr()[0])
+                # logger.info("Decaying learning rate to %g" % scheduler.get_lr()[0])
 
                 base_ratio = args.min_learning_rate / args.learning_rate
                 if global_step < args.warmup_steps:
@@ -127,7 +126,7 @@ def train(args, train_dataset, model, tokenizer, word2id):
                 f1, preds = evaluate(args, dev_dataset, model, tokenizer, word2id)
 
                 best_acc = max(f1, best_acc)
-                print('best acc:', best_acc)
+                logger.info('best acc:', best_acc)
 
 
         logger.info(" train average loss = %s", epoch_loss / step)
@@ -135,7 +134,7 @@ def train(args, train_dataset, model, tokenizer, word2id):
         dev_dataset = load_dataset(args, word2id, 'test')
         f1, preds = evaluate(args, dev_dataset, model, tokenizer, word2id)
         best_acc = max(f1, best_acc)
-        print('best acc:', best_acc)
+        logger.info('best acc:', best_acc)
 
         # f = codecs.open('snli/test.txt', 'r')
         # f_out = codecs.open('snli_bad_case/bad_case_' + str(epoch) + '.txt', 'w')
@@ -143,10 +142,10 @@ def train(args, train_dataset, model, tokenizer, word2id):
         # for i, line in enumerate(lines):
         #     if int(line.strip()[-1]) != preds[i]:
         #         f_out.write(line.strip() + '\t' + str(preds[i]) + '\n')
-        # print('write bad case!!!')
+        # logger.info('write bad case!!!')
 
-    print('*' * 20)
-    print('best acc:', best_acc)
+    logger.info('*' * 20)
+    logger.info('best acc:', best_acc)
 
 
     return global_step, tr_loss / global_step
@@ -192,7 +191,7 @@ def evaluate(args, eval_dataset, model, tokenizer, word2id):
 
     eval_loss = eval_loss / nb_eval_steps
     preds = np.argmax(preds, axis=1)
-    print(preds[:20])
+    logger.info(preds[:20])
 
     # result = f1_score(out_label_ids, preds)
     result = accuracy_score(out_label_ids, preds)
@@ -287,6 +286,8 @@ def main():
     # Set Vocab
     vocab, word2id = load_vocab(args)
 
+    args.vocab_size = max(args.vocab_size, len(vocab)+1)
+
     # Build Model
     model = MatchModel(args)
     model.to(args.device)
@@ -296,7 +297,6 @@ def main():
 
     if args.do_train:
         train_dataset = load_dataset(args, word2id, 'train')
-        # print('load dataset finish')
         global_step, tr_loss = train(args, train_dataset, model, vocab, word2id)
         logger.info("global_step = %s, average loss = %s", global_step, tr_loss)
 
@@ -427,7 +427,7 @@ if __name__ == '__main__':
 #                 # for i, line in enumerate(lines):
 #                 #     if int(line.strip()[-1]) != preds[i]:
 #                 #         f_out.write(line.strip() + '\t' + str(preds[i]) + '\n')
-#                 # print('write bad case!!!')
+#                 # logger.info('write bad case!!!')
 #
 #
 # """

@@ -26,16 +26,16 @@ def set_seed(args):
 def build_vocab(args):
     args.logger.info("building vocab")
 
-    vocab_path = os.path.join("data", args.task, "vocab.txt")
+    vocab_path = os.path.join(args.data_dir, args.task, "vocab.txt")
 
     if not os.path.exists(vocab_path):
         vocab = Counter()
 
-        data_dir = os.path.join("data", args.task)
+        data_dir = os.path.join(args.data_dir, args.task)
         files = os.listdir(data_dir)
         for file in files:
             if not os.path.isdir(file) and file != '.DS_Store':
-                file_path = os.path.join("data", args.task, file)
+                file_path = os.path.join(args.data_dir, args.task, file)
                 with open(file_path, 'r') as f:
                     for line in f.readlines():
                         text_a, text_b, label = line.strip().split('\t')
@@ -56,7 +56,7 @@ def build_vocab(args):
 def load_vocab(args):
     args.logger.info("loading vocab")
 
-    vocab_path = os.path.join("data", args.task, "vocab.txt")
+    vocab_path = os.path.join(args.data_dir, args.task, "vocab.txt")
     if not os.path.exists(vocab_path):
         build_vocab(args)
 
@@ -86,24 +86,23 @@ def sentence2ids(args, sentence, word2id):
 
 def load_embedding(args):
     args.logger.info('loading embedding')
-    embedding_cache_path = os.path.join('data/glove', args.task+'.pkl')
+    embedding_cache_path = os.path.join(args.data_dir, 'glove', args.task+'.pkl')
 
     if os.path.exists(embedding_cache_path):
         with open(embedding_cache_path, 'rb') as f:
             embedding = pickle.load(f)
     else:
-        vocab_path = os.path.join('data', args.task, 'vocab.txt')
+        vocab_path = os.path.join(args.data_dir, args.task, 'vocab.txt')
 
         if not os.path.exists(vocab_path):
             build_vocab(args)
 
         vocab, word2id = load_vocab(args)
 
-        args.vocab_size = max(args.vocab_size, len(vocab)+1)
         embedding = np.zeros((args.vocab_size, 300))
         tar_count = 0
         glove_vocab = {}
-        glove_path = os.path.join("data", "glove", "glove.840B.300d.txt")
+        glove_path = os.path.join(args.data_dir, "glove", "glove.840B.300d.txt")
         with open(glove_path) as f:
             file_length = 2196017
             log_index = 0
