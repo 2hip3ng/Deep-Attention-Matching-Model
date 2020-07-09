@@ -20,7 +20,7 @@ class EmbeddingLayer(nn.Module):
         self.dropout = nn.Dropout(args.embedding_dropout_prob)
 
         embedding = load_embedding(args)
-        self.word_embeddings.weight.requires_grad = args.fix_embedding    # False
+        self.word_embeddings.weight.requires_grad = not args.fix_embedding    # False
         self.word_embeddings.weight.data.copy_(torch.from_numpy(embedding))
 
     def forward(self, input_ids):

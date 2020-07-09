@@ -29,9 +29,6 @@ def train(args, train_dataset, model, tokenizer, word2id):
         t_total = len(train_dataloader) // args.gradient_accumulation_steps * args.num_train_epochs
 
 
-    if args.n_gpu > 1:
-        model = torch.nn.DataParallel(model)
-
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, eps=args.adam_epsilon)
     # optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.1)
@@ -124,9 +121,14 @@ def train(args, train_dataset, model, tokenizer, word2id):
 
                 dev_dataset = load_dataset(args, word2id, 'test')
                 f1, preds = evaluate(args, dev_dataset, model, tokenizer, word2id)
-
+                
+                if f1 > best_acc:
+                    pass
+                    # model_path = os.path.join(args.output, 'damm_'+args.task+'.bin')
+                    # torch.save(model.state_dict(), model_path)
+                    # logger.info(' save model to output %s', model_path)
                 best_acc = max(f1, best_acc)
-                logger.info('best acc:', best_acc)
+                logger.info('best acc: %s', best_acc)
 
 
         logger.info(" train average loss = %s", epoch_loss / step)
@@ -134,7 +136,7 @@ def train(args, train_dataset, model, tokenizer, word2id):
         dev_dataset = load_dataset(args, word2id, 'test')
         f1, preds = evaluate(args, dev_dataset, model, tokenizer, word2id)
         best_acc = max(f1, best_acc)
-        logger.info('best acc:', best_acc)
+        logger.info('best acc: %s', best_acc)
 
         # f = codecs.open('snli/test.txt', 'r')
         # f_out = codecs.open('snli_bad_case/bad_case_' + str(epoch) + '.txt', 'w')
@@ -145,7 +147,7 @@ def train(args, train_dataset, model, tokenizer, word2id):
         # logger.info('write bad case!!!')
 
     logger.info('*' * 20)
-    logger.info('best acc:', best_acc)
+    logger.info('best acc: %s', best_acc)
 
 
     return global_step, tr_loss / global_step
@@ -157,9 +159,6 @@ def evaluate(args, eval_dataset, model, tokenizer, word2id):
     eval_sampler = SequentialSampler(eval_dataset)
     eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size)
 
-    # multi-gpu eval
-    if args.n_gpu > 1:
-        model = torch.nn.DataParallel(model)
 
     # Eval!
     logger.info("***** Running evaluation *****")
@@ -191,7 +190,6 @@ def evaluate(args, eval_dataset, model, tokenizer, word2id):
 
     eval_loss = eval_loss / nb_eval_steps
     preds = np.argmax(preds, axis=1)
-    logger.info(preds[:20])
 
     # result = f1_score(out_label_ids, preds)
     result = accuracy_score(out_label_ids, preds)
@@ -290,6 +288,10 @@ def main():
 
     # Build Model
     model = MatchModel(args)
+    
+    if args.n_gpu > 1:
+        model = torch.nn.DataParallel(model)
+    
     model.to(args.device)
     model_init(model, args)
 
