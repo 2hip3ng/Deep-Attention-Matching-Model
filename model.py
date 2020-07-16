@@ -308,7 +308,10 @@ class MatchModel(nn.Module):
         self.pooling = Pooling(args)
         self.prediction = Prediction(args)
         self.encs = nn.ModuleList([Encoder(args) for _ in range(args.num_last_selfatt_layers)])
-        self.loss_fct = CrossEntropyLoss()
+        if args.use_smooth:
+            self.loss_fct = LabelSmoothingLoss(classes=len(args.labels), smoothing=0.1)
+        else:
+            self.loss_fct = CrossEntropyLoss()
 
     def forward(self, input_ids_a, input_ids_b, attention_mask_a, attention_mask_b, labels):
         hidden_states_a = self.embedding(input_ids_a)
@@ -331,3 +334,24 @@ class MatchModel(nn.Module):
 
         return outputs
 
+
+class LabelSmoothingLoss(nn.Module):
+    def __init__(self, classes, smoothing=0.0, dim=-1, reduction='none'):
+        super(LabelSmoothingLoss, self).__init__()
+        self.confidence = 1.0 - smoothing
+        self.smoothing = smoothing
+        self.cls = classes
+        self.dim = dim
+        self.reduction = reduction
+
+    def forward(self, pred, target):
+        pred = pred.log_softmax(dim=self.dim)
+        with torch.no_grad():
+            # true_dist = pred.data.clone()
+            true_dist = torch.zeros_like(pred)
+            true_dist.fill_(self.smoothing / (self.cls - 1))
+            true_dist.scatter_(1, target.data.unsqueeze(1), self.confidence)
+        if self.reduction == 'none':
+            return torch.sum(-true_dist * pred, dim=self.dim)
+        else:
+            return torch.mean(torch.sum(-true_dist * pred, dim=self.dim))
