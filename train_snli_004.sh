@@ -9,6 +9,9 @@ python train.py \
       --per_gpu_test_batch_size 256 \
       --logging_steps 100 \
       --save_steps 500 \
-      --eval_steps 150  \
-      --use_smooth True
-# 88.75
+      --eval_steps 200 \
+      --seed 42 \
+      --lr_decay_steps 60000 \
+      --warmup_steps 5000 \
+      --num_train_epochs 60
+# 88.50

@@ -1,12 +1,12 @@
 python train.py \
       --data /data/wangzhipeng05/DAMM_data/data \
-      --output /model/wangzhipeng05/DAMM_output/snli \
-      --task snli \
-      --labels [0,1,2] \
+      --output /model/wangzhipeng05/DAMM_output/quora \
+      --task quora \
+      --labels [0,1] \
       --per_gpu_train_batch_size 256 \
       --per_gpu_eval_batch_size 256 \
       --per_gpu_test_batch_size 256 \
       --logging_steps 100 \
       --save_steps 500  \
-      --eval_steps 200 \
-      --seed 2019 
+      --eval_steps 100 \
+      --learning_rate 0.01  
