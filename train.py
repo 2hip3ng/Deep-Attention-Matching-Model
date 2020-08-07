@@ -120,16 +120,15 @@ def train(args, train_dataset, model, tokenizer, word2id):
                 logger.info(" train average loss = %s", epoch_loss / step)
 
                 dev_dataset = load_dataset(args, word2id, 'test')
-                f1, preds = evaluate(args, dev_dataset, model, tokenizer, word2id)
+                acc, preds = evaluate(args, dev_dataset, model, tokenizer, word2id)
                 
-                if f1 > best_acc:
-                    pass
-                    # model_path = os.path.join(args.output, 'damm_'+args.task+'.bin')
-                    # torch.save(model.state_dict(), model_path)
-                    # logger.info(' save model to output %s', model_path)
-                best_acc = max(f1, best_acc)
+                if acc > best_acc:
+                    model_path = os.path.join(args.output, 'damm_'+args.task+'_model_best.pth')
+                    torch.save(model, model_path)
+                    logger.info(' save model to output %s', model_path)
+                best_acc = max(acc, best_acc)
                 logger.info('best acc: %s', best_acc)
-
+                
 
         logger.info(" train average loss = %s", epoch_loss / step)
 
