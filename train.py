@@ -123,7 +123,7 @@ def train(args, train_dataset, model, tokenizer, word2id):
                 acc, preds = evaluate(args, dev_dataset, model, tokenizer, word2id)
                 
                 if acc > best_acc:
-                    model_path = os.path.join(args.output, 'damm_'+args.task+'_model_best.pth')
+                    model_path = os.path.join(args.output_dir, 'damm_'+args.task+'_model_best.pth')
                     torch.save(model, model_path)
                     logger.info(' save model to output %s', model_path)
                 best_acc = max(acc, best_acc)
@@ -294,7 +294,6 @@ def main():
     
     model.to(args.device)
     model_init(model, args)
-
     logger.info("Training parameters %s", args)
 
     if args.do_train:

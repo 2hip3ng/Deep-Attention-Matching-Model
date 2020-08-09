@@ -4,3 +4,4 @@ __py_cache__
 .DS_Store
 output
 data.zip
+.ipynb_checkpoints/
