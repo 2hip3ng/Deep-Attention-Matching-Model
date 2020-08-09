@@ -83,7 +83,9 @@ def train(args, train_dataset, model, tokenizer, word2id):
             outputs = model(**inputs)
             # outputs = model(batch[0], batch[1], batch[2], batch[3], batch[4])
             loss = outputs[0]  # model outputs are always tuple
-
+            attention_show = outputs[-1]           
+            print(attention_show)
+            os._exit()
             if args.n_gpu > 1:
                 loss = loss.mean()  # mean() to average on multi-gpu parallel training
             if args.gradient_accumulation_steps > 1:

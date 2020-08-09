@@ -177,6 +177,7 @@ class CrossAttLayer(nn.Module):
         attention_scores_a2b = attention_scores_a2b / math.sqrt(self.attention_head_size)
         attention_scores_a2b = attention_scores_a2b + attention_mask_b
         attention_probs_a2b = nn.Softmax(dim=-1)(attention_scores_a2b)
+        out_a = attention_probs_a2b
         attention_probs_a2b = self.dropout(attention_probs_a2b)
         context_layer_a2b = torch.matmul(attention_probs_a2b, value_layer_b)
         context_layer_a2b = context_layer_a2b.permute(0, 2, 1, 3).contiguous()
@@ -188,6 +189,7 @@ class CrossAttLayer(nn.Module):
         attention_scores_b2a = attention_scores_b2a / math.sqrt(self.attention_head_size)
         attention_scores_b2a = attention_scores_b2a + attention_mask_a
         attention_probs_b2a = nn.Softmax(dim=-1)(attention_scores_b2a)
+        out_b = attention_probs_b2a 
         attention_probs_b2a = self.dropout(attention_probs_b2a)
         context_layer_b2a = torch.matmul(attention_probs_b2a, value_layer_a)
         context_layer_b2a = context_layer_b2a.permute(0, 2, 1, 3).contiguous()
@@ -217,7 +219,7 @@ class CrossAttLayer(nn.Module):
         context_layer_a = self.norm(hidden_states_a + context_layer_a)
         context_layer_b = self.norm(hidden_states_b + context_layer_b)
 
-        outputs = (context_layer_a, context_layer_b)
+        outputs = (context_layer_a, context_layer_b, out_a, out_b)
 
         return outputs
 
@@ -234,8 +236,8 @@ class Block(nn.Module):
         for i, encoder in enumerate(self.encoders):
             out_a = encoder(out_a, attention_mask_a)
             out_b = encoder(out_b, attention_mask_b)
-        out_a, out_b = self.crossattlayer(out_a, out_b, attention_mask_a, attention_mask_b)
-        return out_a, out_b
+        out = self.crossattlayer(out_a, out_b, attention_mask_a, attention_mask_b)
+        return out
 
 
 class CNN(nn.Module):
@@ -316,8 +318,13 @@ class MatchModel(nn.Module):
     def forward(self, input_ids_a, input_ids_b, attention_mask_a, attention_mask_b, labels):
         hidden_states_a = self.embedding(input_ids_a)
         hidden_states_b = self.embedding(input_ids_b)
+        
+        attention_show = []
         for i, layer in enumerate(self.blocks):
-            hidden_states_a, hidden_states_b = layer(hidden_states_a, hidden_states_b, attention_mask_a, attention_mask_b)
+            hidden_states_a, hidden_states_b, attention_a, attention_b = layer(hidden_states_a, hidden_states_b, attention_mask_a, attention_mask_b)
+            if i == 0 or i == len(self.blocks)-1:
+                attention_show.append(attention_a)
+                attention_show.append(attention_b)
 
         outputs_a = hidden_states_a
         outputs_b = hidden_states_b
@@ -330,7 +337,7 @@ class MatchModel(nn.Module):
 
         outputs = self.prediction(outputs_a, outputs_b)
         loss = self.loss_fct(outputs, labels)
-        outputs = (loss, outputs)
+        outputs = (loss, outputs, attention_show)
 
         return outputs
 
