@@ -83,9 +83,6 @@ def train(args, train_dataset, model, tokenizer, word2id):
             outputs = model(**inputs)
             # outputs = model(batch[0], batch[1], batch[2], batch[3], batch[4])
             loss = outputs[0]  # model outputs are always tuple
-            attention_show = outputs[-1]           
-            print(attention_show)
-            os._exit()
             if args.n_gpu > 1:
                 loss = loss.mean()  # mean() to average on multi-gpu parallel training
             if args.gradient_accumulation_steps > 1:
@@ -206,6 +203,30 @@ def evaluate(args, eval_dataset, model, tokenizer, word2id):
     return result, list(preds)
 
 
+def case_study(args, eval_dataset, model, tokenizer, word2id):
+    args.eval_batch_size = 1 
+    # Note that DistributedSampler samples randomly
+    eval_sampler = SequentialSampler(eval_dataset)
+    eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size)
+
+
+    # Eval!
+    logger.info("***** Running case study *****")
+
+    for batch in eval_dataloader:
+        model.eval()
+        batch = tuple(t.to(args.device) for t in batch)
+
+        with torch.no_grad():
+            inputs = {"input_ids_a": batch[0], "attention_mask_a": batch[1],
+                      "input_ids_b": batch[2], "attention_mask_b": batch[3], "labels": batch[4]}
+            outputs = model(**inputs)
+            attention_show = outputs[-1]
+
+
+    return attention_show
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -298,6 +319,11 @@ def main():
     model_init(model, args)
     logger.info("Training parameters %s", args)
 
+
+    case_study_dataset = load_dataset(args, word2id, 'case_study')
+    attention_show = case_study(args, case_study_dataset, model, vocab, word2id)
+    print(attention_show[0], attention_show[1])
+    os._exit(0)
     if args.do_train:
         train_dataset = load_dataset(args, word2id, 'train')
         global_step, tr_loss = train(args, train_dataset, model, vocab, word2id)
