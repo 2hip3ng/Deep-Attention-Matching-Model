@@ -11,4 +11,4 @@ python train.py \
       --save_steps 500 \
       --eval_steps 300 \
       --no_symmetry True 
-# GPU 4 
+# GPU 4 88.3 

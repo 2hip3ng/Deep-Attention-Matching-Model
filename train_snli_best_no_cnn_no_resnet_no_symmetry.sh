@@ -13,4 +13,4 @@ python train.py \
       --no_symmetry True \
       --no_cnn True \
       --no_resnet True
-# GPU 4 
+# GPU 4 87.9 

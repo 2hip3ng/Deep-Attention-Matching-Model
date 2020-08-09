@@ -12,4 +12,4 @@ python train.py \
       --eval_steps 300 \
       --no_symmetry True \
       --no_cnn True
-# GPU 4 
+# GPU 4 88.0 

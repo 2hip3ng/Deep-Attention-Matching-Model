@@ -11,4 +11,4 @@ python train.py \
       --save_steps 500 \
       --eval_steps 300 \
       --no_cnn True
-# GPU 4 
+# GPU 4 87.9 
