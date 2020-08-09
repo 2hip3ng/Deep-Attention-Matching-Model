@@ -120,6 +120,7 @@ class Encoder(nn.Module):
 class CrossAttLayer(nn.Module):
     def __init__(self, args):
         super().__init__()
+        self.no_resnet = args.no_resnet 
         self.num_attention_heads = args.num_attention_heads
         self.attention_head_size = int(args.hidden_size / args.num_attention_heads)
         self.all_head_size = self.num_attention_heads * self.attention_head_size
@@ -213,9 +214,13 @@ class CrossAttLayer(nn.Module):
 
         context_layer_a = self.dropout(context_layer_a)
         context_layer_b = self.dropout(context_layer_b)
-
-        context_layer_a = self.norm(hidden_states_a + context_layer_a)
-        context_layer_b = self.norm(hidden_states_b + context_layer_b)
+        
+        if self.no_resnet == True:
+            context_layer_a = self.norm(context_layer_a)
+            context_layer_b = self.norm(context_layer_b)
+        else:
+            context_layer_a = self.norm(hidden_states_a + context_layer_a)
+            context_layer_b = self.norm(hidden_states_b + context_layer_b)
 
         outputs = (context_layer_a, context_layer_b)
 
@@ -266,6 +271,7 @@ class Pooling(nn.Module):
         super().__init__()
         self.cnn = CNN(args)
         self.dropout = nn.Dropout(args.hidden_dropout_prob)
+        self.no_cnn = args.no_cnn
 
     def forward(self, hidden_states, mask):
         cnn_output = self.cnn(hidden_states)
@@ -275,8 +281,11 @@ class Pooling(nn.Module):
         mask = extended_mask
         max_output = hidden_states + mask
         max_output = max_output.max(dim=1)[0]
-
-        out = torch.cat([cnn_output, max_output], dim=-1)
+        
+        if self.no_cnn:
+            out = max_output
+        else:
+            out = torch.cat([cnn_output, max_output], dim=-1)
         out = self.dropout(out)
 
         return out
@@ -285,13 +294,25 @@ class Pooling(nn.Module):
 class Prediction(nn.Module):
     def __init__(self, args):
         super().__init__()
+        self.no_symmetry = args.no_symmetry
+        if self.no_symmetry:
+            vector_num = 2
+        else:
+            vector_num = 5
 
-        self.dense_1 = nn.Linear(args.cnn_num_filters * len(args.cnn_filter_sizes) * 5 + args.hidden_size * 5, args.hidden_size * 2)
+        if args.no_cnn:
+            self.dense_1 = nn.Linear(args.hidden_size * vector_num, args.hidden_size * 2)
+        else:
+            self.dense_1 = nn.Linear(args.cnn_num_filters * len(args.cnn_filter_sizes) * vector_num + args.hidden_size * vector_num, args.hidden_size * 2)
         self.dropout = nn.Dropout(args.hidden_dropout_prob)
         self.dense_2 = nn.Linear(args.hidden_size * 2, len(args.labels))
+        self.no_symmetry = args.no_symmetry
 
     def forward(self, a, b):
-        outputs = torch.cat([a, b, a - b, torch.abs(a - b), a * b], dim=-1)
+        if self.no_symmetry:
+            outputs = torch.cat([a, b], dim=-1)
+        else:
+            outputs = torch.cat([a, b, a - b, torch.abs(a - b), a * b], dim=-1)
         outputs = self.dropout(outputs)
         outputs = self.dense_1(outputs)
         outputs = gelu(outputs)

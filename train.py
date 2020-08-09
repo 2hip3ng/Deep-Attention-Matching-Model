@@ -242,6 +242,9 @@ def main():
     parser.add_argument("--cnn_num_filters", default=200, type=int)
     parser.add_argument("--cnn_filter_sizes", default=[1,2,3], type=list)
     parser.add_argument("--use_smooth", default=False, type=bool)
+    parser.add_argument("--no_resnet", default=False, type=bool)
+    parser.add_argument("--no_cnn", default=False, type=bool)
+    parser.add_argument("--no_symmetry", default=False, type=bool)
 
 
     # Optimizer parameters

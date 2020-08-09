@@ -10,5 +10,5 @@ python train.py \
       --logging_steps 100 \
       --save_steps 500 \
       --eval_steps 300 \
-      --no_cnn True
-# GPU 4 
+      --no_resnet True 
+# GPU 4
