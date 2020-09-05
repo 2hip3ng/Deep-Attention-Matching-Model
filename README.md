@@ -12,32 +12,24 @@ code for paper: *Sentence Matching With Deep Self-Attention and Co-Attention Fea
 
 ## How to run the code ?
 
-* Prepare Environments
+* Prepare environments
 
 ```mariadb
 python >= 3.6
 torch >= 1.5
 ```
 
-
-
-* Prepare Data
+* Prepare data
 
 ```shell
-mkdir data
-cd data
-mkdir glove
-mkdir snli
+$ mkdir data
+$ cd data
+$ mkdir snli
 ```
 
 * Run the code
 
 ```shell
-sh run.sh
+$ sh run.sh
 ```
 
-
-
-
-
-## 
