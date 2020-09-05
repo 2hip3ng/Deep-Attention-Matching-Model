@@ -6,7 +6,7 @@ code for paper: *Sentence Matching With Deep Self-Attention and Co-Attention Fea
 
 ## Model Introduction
 
-![framework](https://github.com/2hip3ng/Deep-Attention-Matching-Model/blob/master/paper/images/framework.png)
+![framework](https://github.com/2hip3ng/Deep-Attention-Matching-Model/blob/master/images/framework.png)
 
 
 
