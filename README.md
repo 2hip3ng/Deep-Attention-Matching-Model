@@ -1,7 +1,4 @@
-# Deep-Attention-Matching-Model
-
-DAMM: Deep-Attention-Matching-Model
-
+# DAMM: Deep-Attention-Matching-Model
 
 code for paper: *Sentence Matching With Deep Self-Attention and Co-Attention Features*
 
@@ -15,11 +12,32 @@ code for paper: *Sentence Matching With Deep Self-Attention and Co-Attention Fea
 
 ## How to run the code ?
 
+* Prepare Environments
+
+```mariadb
+python >= 3.6
+torch >= 1.5
+```
 
 
-## 数据准备 
+
+* Prepare Data
+
+```shell
 mkdir data
 cd data
 mkdir glove
 mkdir snli
+```
 
+* Run the code
+
+```shell
+sh run.sh
+```
+
+
+
+
+
+## 
